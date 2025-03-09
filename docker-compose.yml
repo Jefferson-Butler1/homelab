@@ -1,0 +1,132 @@
+services:
+  # --- VPN + Torrent Client ---
+  transmission-vpn:
+    image: haugene/transmission-openvpn
+    container_name: transmission-vpn
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - OPENVPN_PROVIDER=SURFSHARK
+      - OPENVPN_USERNAME=${SURFSHARK_UNAME}
+      - OPENVPN_PASSWORD=${SURFSHARK_PASSWORD}
+      - TRANSMISSION_DOWNLOAD_DIR=/data/completed
+      - CREATE_TUN_DEVICE=true
+      - OPENVPN_CONFIG=us-sea.prod.surfshark.com_tcp
+      - LOCAL_NETWORK=192.168.0.0/16 
+    volumes:
+      - ./transmission/config:/config
+      - /media/downloads/completed:/data/completed
+      - /media/downloads/incomplete:/data/incomplete
+    ports:
+      - "9091:9091"  
+    restart: unless-stopped
+
+  # --- *Arr Suite ---
+  prowlarr:
+    image: ghcr.io/linuxserver/prowlarr
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./prowlarr/config:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+
+  # necessary for cloudflare bypass for indexers
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=America/Los_Angeles  
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./sonarr/config:/config
+      - /media/tv:/tv                   
+      - /media/downloads:/data
+    ports:
+      - "8989:8989"  
+    restart: unless-stopped
+
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./radarr/config:/config
+      - /media/movies:/movies           
+      - /media/downloads:/downloads     
+      - /media/downloads:/data
+    ports: 
+      - "7878:7878"
+    restart: unless-stopped
+
+  lidarr:
+    image: ghcr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./lidarr/config:/config
+      - /media/music:/music
+      - /media/downloads:/downloads
+      - /media/downloads:/data
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+
+  readarr:
+    image: ghcr.io/linuxserver/readarr:develop  
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./readarr/config:/config
+      - /media/books:/books
+      - /media/downloads:/downloads
+      - /media/downloads:/data
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+
+  # --- Plex Media Server ---
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    environment: 
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility  
+      - PLEX_CLAIM=claim-uVAA8HKtzBSKKXsueJry
+
+    deploy: 
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, compute, video, utility]
+    devices:
+      - /dev/nvidia0:/dev/nvidia0  
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+    volumes:
+      - ./plex/config:/config
+      - /media:/media
+    ports:
+      - "32400:32400"
+    restart: unless-stopped
+

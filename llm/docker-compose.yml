@@ -1,0 +1,35 @@
+# Optimized for NVIDIA Gpu
+
+services:
+  # --- Ollama + OpenWebUI ---
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu, compute, utility]
+    volumes:
+      - ./ollama/models:/root/.ollama  # Store models on the host
+    ports:
+      - "11434:11434" 
+    restart: unless-stopped
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_API_BASE_URL=http://ollama:11434
+    volumes:
+      - ./openwebui:/app/backend/data  
+    ports:
+      - "11435:8080"  
+    restart: unless-stopped

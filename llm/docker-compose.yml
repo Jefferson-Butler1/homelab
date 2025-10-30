@@ -16,9 +16,9 @@ services:
               count: 1
               capabilities: [gpu, compute, utility]
     volumes:
-      - ./ollama/models:/root/.ollama  # Store models on the host
+      - ./ollama/models:/root/.ollama # Store models on the host
     ports:
-      - "11434:11434" 
+      - "11434:11434"
     restart: unless-stopped
 
   openwebui:
@@ -29,7 +29,7 @@ services:
     environment:
       - OLLAMA_API_BASE_URL=http://ollama:11434
     volumes:
-      - ./openwebui:/app/backend/data  
+      - ./openwebui:/app/backend/data
     ports:
-      - "11435:8080"  
+      - "11435:8080"
     restart: unless-stopped

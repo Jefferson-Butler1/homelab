@@ -5,34 +5,16 @@ services:
     container_name: transmission-vpn
     cap_add:
       - NET_ADMIN
-    ulimits:
-      nofile: 65536
-      nproc: 32768
-    networks:
-      - media-net
     environment:
-      - TRANSMISSION_PEER_PORT=51413
-      - TRANSMISSION_PEER_PORT_RANDOM_HIGH=65535
-      - TRANSMISSION_PEER_PORT_RANDOM_LOW=49152
-      - TRANSMISSION_PEER_PORT_RANDOM_ON_START=false
-      - TRANSMISSION_PEER_LIMIT_GLOBAL=25000
-      - TRANSMISSION_PORT_FORWARDING_ENABLED=true
-      # Seeding configuration for private trackers (configure via web UI)
-      # - TRANSMISSION_RATIO_LIMIT_ENABLED=true
-      # - TRANSMISSION_RATIO_LIMIT=2
-      # - TRANSMISSION_IDLE_SEEDING_LIMIT_ENABLED=true
-      # - TRANSMISSION_IDLE_SEEDING_LIMIT=10080
       - OPENVPN_PROVIDER=SURFSHARK
       - OPENVPN_USERNAME=${SURFSHARK_UNAME}
       - OPENVPN_PASSWORD=${SURFSHARK_PASSWORD}
-      - TRANSMISSION_DOWNLOAD_DIR=/data
+      - TRANSMISSION_DOWNLOAD_DIR=/data/completed
       - CREATE_TUN_DEVICE=true
-      - OPENVPN_CONFIG=us-sfo.prod.surfshark.com_udp
+      - OPENVPN_CONFIG=us-sea.prod.surfshark.com_tcp
       - LOCAL_NETWORK=192.168.0.0/16
     volumes:
-      - /media/config/transmission/config:/config
-      - /media/movies:/data/movies
-      - /media/tv:/data/tv
+      - ./transmission/config:/config
       - /media/downloads/completed:/data/completed
       - /media/downloads/incomplete:/data/incomplete
     ports:
@@ -43,13 +25,11 @@ services:
   prowlarr:
     image: ghcr.io/linuxserver/prowlarr
     container_name: prowlarr
-    networks:
-      - media-net
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/prowlarr/config:/config
+      - ./prowlarr/config:/config
     ports:
       - "9696:9696"
     restart: unless-stopped
@@ -58,8 +38,6 @@ services:
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
-    networks:
-      - media-net
     environment:
       - TZ=America/Los_Angeles
     ports:
@@ -69,16 +47,13 @@ services:
   sonarr:
     image: ghcr.io/linuxserver/sonarr
     container_name: sonarr
-    networks:
-      - media-net
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/sonarr/config:/config
-      - /media/tv:/data/tv
-      - /media/downloads/completed:/data/completed
-      - /media/downloads/incomplete:/data/incomplete
+      - ./sonarr/config:/config
+      - /media/tv:/tv
+      - /media/downloads:/data
     ports:
       - "8989:8989"
     restart: unless-stopped
@@ -86,63 +61,46 @@ services:
   radarr:
     image: ghcr.io/linuxserver/radarr
     container_name: radarr
-    networks:
-      - media-net
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/radarr/config:/config
-      - /media/movies:/data/movies
-      - /media/downloads/completed:/data/completed
-      - /media/downloads/incomplete:/data/incomplete
+      - ./radarr/config:/config
+      - /media/movies:/movies
+      - /media/downloads:/downloads
+      - /media/downloads:/data
     ports:
       - "7878:7878"
     restart: unless-stopped
 
-  lidarr:
-    image: ghcr.io/linuxserver/lidarr
-    container_name: lidarr
-    networks:
-      - media-net
-    environment:
-      - PUID=1000
-      - PGID=1000
-    volumes:
-      - /media/config/lidarr/config:/config
-      - /media/music:/music
-      - /media/downloads:/data
-    ports:
-      - "8686:8686"
-    restart: unless-stopped
-
-  # readarr:
-  #   image: lscr.io/linuxserver/readarr:nightly
-  #   container_name: readarr
+  # lidarr:
+  #   image: ghcr.io/linuxserver/lidarr
+  #   container_name: lidarr
   #   environment:
   #     - PUID=1000
   #     - PGID=1000
   #   volumes:
-  #     - /media/config/readarr/config:/config
-  #     - /media:/data
+  #     - ./lidarr/config:/config
+  #     - /media/music:/music
+  #     - /media/downloads:/downloads
+  #     - /media/downloads:/data
   #   ports:
-  #     - "8787:8787"
+  #     - "8686:8686"
   #   restart: unless-stopped
 
-  # --- Media Request Management ---
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    networks:
-      - media-net
+  readarr:
+    image: ghcr.io/linuxserver/readarr:develop
+    container_name: readarr
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Los_Angeles
     volumes:
-      - /media/config/overseerr/config:/config
+      - ./readarr/config:/config
+      - /media/books:/books
+      - /media/downloads:/downloads
+      - /media/downloads:/data
     ports:
-      - "5055:5055"
+      - "8787:8787"
     restart: unless-stopped
 
   # --- Plex Media Server ---
@@ -156,8 +114,6 @@ services:
       # - NVIDIA_VISIBLE_DEVICES=all
       # - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - PLEX_CLAIM=claim-UJz5vovA_Fca9pFn7PdN
-      # Force Plex to advertise the tunnel URL for remote access
-      - ADVERTISE_IP=https://plex.jefferson-butler.com:443
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:32400/web"]
       interval: 30s
@@ -176,13 +132,8 @@ services:
       - /dev/nvidiactl:/dev/nvidiactl
       - /dev/nvidia-uvm:/dev/nvidia-uvm
     volumes:
-      - /media/config/plex/config:/config
+      - ./plex/config:/config
       - /media:/media
-      - /media/transcode:/transcode
     # ports: # Not needed with network_mode: host
     #   - "32400:32400"
     restart: unless-stopped
-
-networks:
-  media-net:
-    driver: bridge

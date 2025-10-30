@@ -2,3 +2,4 @@ include:
   - ./media/docker-compose.yml
   - ./llm/docker-compose.yml
   - ./searxng/docker-compose.yml
+  - ./homeassistant/docker-compose.yml

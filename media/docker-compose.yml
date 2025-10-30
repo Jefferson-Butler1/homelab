@@ -30,7 +30,7 @@ services:
       - OPENVPN_CONFIG=us-sfo.prod.surfshark.com_udp
       - LOCAL_NETWORK=192.168.0.0/16
     volumes:
-      - /media/config/transmission/config:/config
+      - ./transmission/config:/config
       - /media/movies:/data/movies
       - /media/tv:/data/tv
       - /media/downloads/completed:/data/completed
@@ -49,7 +49,7 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/prowlarr/config:/config
+      - ./prowlarr/config:/config
     ports:
       - "9696:9696"
     restart: unless-stopped
@@ -75,7 +75,7 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/sonarr/config:/config
+      - ./sonarr/config:/config
       - /media/tv:/data/tv
       - /media/downloads/completed:/data/completed
       - /media/downloads/incomplete:/data/incomplete
@@ -92,7 +92,7 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/radarr/config:/config
+      - ./radarr/config:/config
       - /media/movies:/data/movies
       - /media/downloads/completed:/data/completed
       - /media/downloads/incomplete:/data/incomplete
@@ -109,7 +109,7 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - /media/config/lidarr/config:/config
+      - ./lidarr/config:/config
       - /media/music:/music
       - /media/downloads:/data
     ports:
@@ -123,7 +123,7 @@ services:
   #     - PUID=1000
   #     - PGID=1000
   #   volumes:
-  #     - /media/config/readarr/config:/config
+  #     - ./readarr/config:/config
   #     - /media:/data
   #   ports:
   #     - "8787:8787"
@@ -140,7 +140,7 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - /media/config/overseerr/config:/config
+      - ./overseerr/config:/config
     ports:
       - "5055:5055"
     restart: unless-stopped
@@ -176,7 +176,7 @@ services:
       - /dev/nvidiactl:/dev/nvidiactl
       - /dev/nvidia-uvm:/dev/nvidia-uvm
     volumes:
-      - /media/config/plex/config:/config
+      - ./plex/config:/config
       - /media:/media
       - /media/transcode:/transcode
     # ports: # Not needed with network_mode: host

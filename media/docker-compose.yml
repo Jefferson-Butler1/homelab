@@ -30,7 +30,7 @@ services:
       - OPENVPN_CONFIG=us-sfo.prod.surfshark.com_udp
       - LOCAL_NETWORK=192.168.0.0/16
     volumes:
-      - ./transmission/config:/config
+      - /containers/media/transmission/config:/config
       - /media/movies:/data/movies
       - /media/tv:/data/tv
       - /media/downloads/completed:/data/completed
@@ -47,9 +47,9 @@ services:
       - media-net
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
     volumes:
-      - ./prowlarr/config:/config
+      - /containers/media/prowlarr/config:/config
     ports:
       - "9696:9696"
     restart: unless-stopped
@@ -73,9 +73,9 @@ services:
       - media-net
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
     volumes:
-      - ./sonarr/config:/config
+      - /containers/media/sonarr/config:/config
       - /media/tv:/data/tv
       - /media/downloads/completed:/data/completed
       - /media/downloads/incomplete:/data/incomplete
@@ -90,9 +90,9 @@ services:
       - media-net
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
     volumes:
-      - ./radarr/config:/config
+      - /containers/media/radarr/config:/config
       - /media/movies:/data/movies
       - /media/downloads/completed:/data/completed
       - /media/downloads/incomplete:/data/incomplete
@@ -107,9 +107,9 @@ services:
       - media-net
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
     volumes:
-      - ./lidarr/config:/config
+      - /containers/media/lidarr/config:/config
       - /media/music:/music
       - /media/downloads:/data
     ports:
@@ -121,7 +121,7 @@ services:
   #   container_name: readarr
   #   environment:
   #     - PUID=1000
-  #     - PGID=1000
+  #     - PGID=1001
   #   volumes:
   #     - ./readarr/config:/config
   #     - /media:/data
@@ -137,10 +137,10 @@ services:
       - media-net
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
       - TZ=America/Los_Angeles
     volumes:
-      - ./overseerr/config:/config
+      - /containers/media/overseerr/config:/config
     ports:
       - "5055:5055"
     restart: unless-stopped
@@ -152,7 +152,7 @@ services:
     network_mode: host
     environment:
       - PUID=1000
-      - PGID=1000
+      - PGID=1001
       # - NVIDIA_VISIBLE_DEVICES=all
       # - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
       - PLEX_CLAIM=claim-UJz5vovA_Fca9pFn7PdN
@@ -176,11 +176,27 @@ services:
       - /dev/nvidiactl:/dev/nvidiactl
       - /dev/nvidia-uvm:/dev/nvidia-uvm
     volumes:
-      - ./plex/config:/config
+      - /containers/media/plex/config:/config
       - /media:/media
       - /media/transcode:/transcode
     # ports: # Not needed with network_mode: host
     #   - "32400:32400"
+    restart: unless-stopped
+
+  # --- Plex Statistics & Monitoring ---
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    networks:
+      - media-net
+    environment:
+      - PUID=1000
+      - PGID=1001
+      - TZ=America/Los_Angeles
+    volumes:
+      - /containers/media/tautulli/config:/config
+    ports:
+      - "8181:8181"
     restart: unless-stopped
 
 networks:
